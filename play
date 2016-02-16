@@ -6,7 +6,7 @@ import itertools
 
 def load():
     import cPickle as pickle
-    with open('.quodlibet/songs') as fh:
+    with open(os.path.expanduser('~/.quodlibet/songs')) as fh:
         return pickle.load(fh)
 
 
