@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+# coding: utf-8
+import os
+import itertools
+
+
+def load():
+    import cPickle as pickle
+    with open('.quodlibet/songs') as fh:
+        return pickle.load(fh)
+
+
+def matches(song, terms):
+    for term in terms:
+        for field in ['title', 'artist', 'album']:
+            if field in song and term.lower() in song[field].lower():
+                break
+        else:
+            return False
+    return True
+
+
+def search(s):
+    terms = s.split(' ')
+    for song in songs:
+        if matches(song, terms):
+            yield song
+
+
+def display(songs, width=None):
+    if width is None:
+        width = float('infinity')
+    fields = ['title', 'artist', 'album']
+    widths = [0, 0, 0]
+
+    def row(i, song):
+        result = [str(i)]
+        for f, field in enumerate(fields):
+            if field in song:
+                result.append(song[field])
+                widths[f] = max(widths[f], len(song[field]))
+            else:
+                result.append('')
+        return result
+
+    rows = [row(i, song) for i, song in enumerate(songs)]
+
+    widths.insert(0, len(str(len(songs))))
+    remaining = width - 2 * (len(widths) - 1)
+
+    for c in xrange(len(widths)):
+        if c == len(widths) - 1:
+            widths[c] = min(widths[c], remaining)
+        else:
+            widths[c] = min(widths[c], remaining/2)
+        remaining -= widths[c]
+
+    def trimpad(i, c):
+        limit = widths[i]
+        text = c
+        if len(text) > limit:
+            text = text[:limit - 1] + '…'
+        if i == 0:
+            return text.rjust(limit)
+        return text.ljust(limit)
+
+    for r in rows:
+        print '  '.join(trimpad(i, c) for i, c in enumerate(r))
+
+
+def limit(generator, limit=10):
+    return list(itertools.islice(generator, limit))
+
+if hasattr(os, 'get_terminal_size'):
+    from os import get_terminal_size
+else:
+    from collections import namedtuple
+    Size = namedtuple('Size', ['lines', 'columns'])
+
+    def get_terminal_size():
+        return Size(*map(int, os.popen('stty size', 'r').read().split()))
+
+if __name__ == '__main__':
+    import readline
+    from quodlibet.remote import Remote
+
+    songs = load()
+
+    sz = get_terminal_size()
+    match = limit(songs, sz.lines - 1)
+    display(match, sz.columns)
+    while True:
+        s = raw_input('> ')
+        try:
+            n = int(s)
+            Remote.send_message('play-file ' + match[n]['~filename'])
+            continue
+        except ValueError:
+            pass
+        sz = get_terminal_size()
+        match = limit(search(s), sz.lines - 1)
+        display(match, sz.columns)
