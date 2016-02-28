@@ -21,7 +21,7 @@ def matches(song, terms):
 
 
 def search(s):
-    terms = s.split(' ')
+    terms = [t for t in s.split(' ') if t != '']
     for song in songs:
         if matches(song, terms):
             yield song
@@ -92,11 +92,11 @@ if __name__ == '__main__':
     while True:
         s = raw_input('> ')
         try:
+        # ' 1234' will search for 1234, not queue song 1234
+        if s.isdigit():
             n = int(s)
             Remote.send_message('play-file ' + match[n]['~filename'])
             continue
-        except ValueError:
-            pass
         sz = get_terminal_size()
         match = limit(search(s), sz.lines - 1)
         display(match, sz.columns)
