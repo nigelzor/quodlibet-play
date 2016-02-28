@@ -2,6 +2,7 @@
 # coding: utf-8
 import os
 import itertools
+import unicodedata
 
 
 def load():
@@ -55,14 +56,40 @@ def display(songs, width=None):
             widths[c] = min(widths[c], remaining/2)
         remaining -= widths[c]
 
-    def trimpad(i, c):
-        limit = widths[i]
-        text = c
-        if len(text) > limit:
-            text = text[:limit - 1] + '…'
-        if i == 0:
+    def ulen(text):
+        length = len(text)
+        if isinstance(text, unicode):
+            for c in text:
+                if unicodedata.east_asian_width(c) == 'W':
+                    length += 1
+        return length
+
+    def usubstr(text, limit):
+        used = 0
+        if isinstance(text, unicode):
+            for i, c in enumerate(text):
+                if unicodedata.east_asian_width(c) == 'W':
+                    if used + 2 > limit:
+                        return text[:i]
+                    used += 2
+                else:
+                    if used + 1 > limit:
+                        return text[:i]
+                    used += 1
+            return text
+        else:
+            return text[:limit]
+
+    def uljust(text, limit):
+        return text + (limit - ulen(text)) * ' '
+
+    def trimpad(column, text):
+        limit = widths[column]
+        if ulen(text) > limit:
+            text = usubstr(text, limit - 1) + '…'
+        if column == 0:
             return text.rjust(limit)
-        return text.ljust(limit)
+        return uljust(text, limit)
 
     for r in rows:
         print '  '.join(trimpad(i, c) for i, c in enumerate(r))
