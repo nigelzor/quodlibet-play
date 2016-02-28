@@ -108,7 +108,7 @@ else:
         return Size(*map(int, os.popen('stty size', 'r').read().split()))
 
 if __name__ == '__main__':
-    import readline
+    import readline  # appears unused, but makes raw_input much nicer
     from quodlibet.remote import Remote
 
     songs = load()
