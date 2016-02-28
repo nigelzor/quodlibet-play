@@ -90,8 +90,11 @@ if __name__ == '__main__':
     match = limit(songs, sz.lines - 1)
     display(match, sz.columns)
     while True:
-        s = raw_input('> ')
         try:
+            s = raw_input('> ')
+        except (EOFError, KeyboardInterrupt):
+            print
+            break
         # ' 1234' will search for 1234, not queue song 1234
         if s.isdigit():
             n = int(s)
