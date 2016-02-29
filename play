@@ -28,18 +28,48 @@ def search(s):
             yield song
 
 
+def ulen(text):
+    length = len(text)
+    if isinstance(text, unicode):
+        for c in text:
+            if unicodedata.east_asian_width(c) == 'W':
+                length += 1
+    return length
+
+
+def usubstr(text, limit):
+    used = 0
+    if isinstance(text, unicode):
+        for i, c in enumerate(text):
+            if unicodedata.east_asian_width(c) == 'W':
+                if used + 2 > limit:
+                    return text[:i]
+                used += 2
+            else:
+                if used + 1 > limit:
+                    return text[:i]
+                used += 1
+        return text
+    else:
+        return text[:limit]
+
+
+def uljust(text, limit):
+    return text + (limit - ulen(text)) * ' '
+
+
 def display(songs, width=None):
     if width is None:
         width = float('infinity')
     fields = ['title', 'artist', 'album']
-    widths = [0, 0, 0]
+    widths = [0] * len(fields)
 
     def row(i, song):
         result = [str(i)]
         for f, field in enumerate(fields):
             if field in song:
                 result.append(song[field])
-                widths[f] = max(widths[f], len(song[field]))
+                widths[f] = max(widths[f], ulen(song[field]))
             else:
                 result.append('')
         return result
@@ -56,43 +86,15 @@ def display(songs, width=None):
             widths[c] = min(widths[c], remaining/2)
         remaining -= widths[c]
 
-    def ulen(text):
-        length = len(text)
-        if isinstance(text, unicode):
-            for c in text:
-                if unicodedata.east_asian_width(c) == 'W':
-                    length += 1
-        return length
-
-    def usubstr(text, limit):
-        used = 0
-        if isinstance(text, unicode):
-            for i, c in enumerate(text):
-                if unicodedata.east_asian_width(c) == 'W':
-                    if used + 2 > limit:
-                        return text[:i]
-                    used += 2
-                else:
-                    if used + 1 > limit:
-                        return text[:i]
-                    used += 1
-            return text
-        else:
-            return text[:limit]
-
-    def uljust(text, limit):
-        return text + (limit - ulen(text)) * ' '
-
-    def trimpad(column, text):
-        limit = widths[column]
+    def trimpad(text, limit, right=False):
         if ulen(text) > limit:
             text = usubstr(text, limit - 1) + '…'
-        if column == 0:
+        if right:
             return text.rjust(limit)
         return uljust(text, limit)
 
     for r in rows:
-        print '  '.join(trimpad(i, c) for i, c in enumerate(r))
+        print '  '.join(trimpad(c, widths[i], i == 0) for i, c in enumerate(r))
 
 
 def limit(generator, limit=10):
