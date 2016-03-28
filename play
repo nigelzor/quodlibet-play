@@ -22,7 +22,11 @@ def matches(song, terms):
 
 
 def search(s):
-    terms = [t for t in s.split(' ') if t != '']
+    try:
+        import shlex
+        terms = [t.decode('utf8') for t in shlex.split(s.encode('utf8')) if t != '']
+    except:
+        terms = [t for t in s.split(' ') if t != '']
     for song in songs:
         if matches(song, terms):
             yield song
