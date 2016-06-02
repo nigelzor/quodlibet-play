@@ -46,16 +46,12 @@ def usubstr(text, limit):
     if isinstance(text, unicode):
         for i, c in enumerate(text):
             if unicodedata.east_asian_width(c) == 'W':
-                if used + 2 > limit:
-                    return text[:i]
                 used += 2
             else:
-                if used + 1 > limit:
-                    return text[:i]
                 used += 1
-        return text
-    else:
-        return text[:limit]
+            if used > limit:
+                return text[:i]
+    return text[:limit]
 
 
 def uljust(text, limit):
