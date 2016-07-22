@@ -36,7 +36,7 @@ def ulen(text):
     length = len(text)
     if isinstance(text, unicode):
         for c in text:
-            if unicodedata.east_asian_width(c) == 'W':
+            if unicodedata.east_asian_width(c) in 'WF':
                 length += 1
     return length
 
@@ -45,7 +45,7 @@ def usubstr(text, limit):
     used = 0
     if isinstance(text, unicode):
         for i, c in enumerate(text):
-            if unicodedata.east_asian_width(c) == 'W':
+            if unicodedata.east_asian_width(c) in 'WF':
                 used += 2
             else:
                 used += 1
