@@ -68,8 +68,9 @@ def display(songs, width=None):
         result = [str(i)]
         for f, field in enumerate(fields):
             if field in song:
-                result.append(song[field])
-                widths[f] = max(widths[f], ulen(song[field]))
+                value = song[field].replace('\n', ', ')
+                result.append(value)
+                widths[f] = max(widths[f], ulen(value))
             else:
                 result.append('')
         return result
