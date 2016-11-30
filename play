@@ -127,7 +127,10 @@ if __name__ == '__main__':
         # ' 1234' will search for 1234, not queue song 1234
         if s.isdigit():
             n = int(s)
-            Remote.send_message('play-file ' + match[n]['~filename'])
+            if n >= len(match):
+                print('IndexError: list index out of range')
+            else:
+                Remote.send_message('play-file ' + match[n]['~filename'])
             continue
         sz = get_terminal_size()
         match = limit(search(s), sz.lines - 1)
