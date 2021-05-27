@@ -1,14 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 import os
 import itertools
 import unicodedata
+import quodlibet.library
+from shutil import get_terminal_size
 
 
 def load():
-    import cPickle as pickle
-    with open(os.path.expanduser('~/.quodlibet/songs')) as fh:
-        return pickle.load(fh)
+    return quodlibet.library.init(os.path.expanduser('~/.config/quodlibet/songs'))
 
 
 def matches(song, terms):
@@ -24,7 +24,7 @@ def matches(song, terms):
 def search(s):
     try:
         import shlex
-        terms = [t.decode('utf8') for t in shlex.split(s.encode('utf8')) if t != '']
+        terms = [t for t in shlex.split(s) if t != '']
     except:
         terms = [t for t in s.split(' ') if t != '']
     for song in songs:
@@ -34,23 +34,21 @@ def search(s):
 
 def ulen(text):
     length = len(text)
-    if isinstance(text, unicode):
-        for c in text:
-            if unicodedata.east_asian_width(c) in 'WF':
-                length += 1
+    for c in text:
+        if unicodedata.east_asian_width(c) in 'WF':
+            length += 1
     return length
 
 
 def usubstr(text, limit):
     used = 0
-    if isinstance(text, unicode):
-        for i, c in enumerate(text):
-            if unicodedata.east_asian_width(c) in 'WF':
-                used += 2
-            else:
-                used += 1
-            if used > limit:
-                return text[:i]
+    for i, c in enumerate(text):
+        if unicodedata.east_asian_width(c) in 'WF':
+            used += 2
+        else:
+            used += 1
+        if used > limit:
+            return text[:i]
     return text[:limit]
 
 
@@ -80,11 +78,11 @@ def display(songs, width=None):
     widths.insert(0, len(str(len(songs))))
     remaining = width - 2 * (len(widths) - 1)
 
-    for c in xrange(len(widths)):
+    for c in range(len(widths)):
         if c == len(widths) - 1:
             widths[c] = min(widths[c], remaining)
         else:
-            widths[c] = min(widths[c], remaining/2)
+            widths[c] = min(widths[c], remaining//2)
         remaining -= widths[c]
 
     def trimpad(text, limit, right=False):
@@ -95,20 +93,12 @@ def display(songs, width=None):
         return uljust(text, limit)
 
     for r in rows:
-        print '  '.join(trimpad(c, widths[i], i == 0) for i, c in enumerate(r))
+        print('  '.join(trimpad(c, widths[i], i == 0) for i, c in enumerate(r)))
 
 
 def limit(generator, limit=10):
     return list(itertools.islice(generator, limit))
 
-if hasattr(os, 'get_terminal_size'):
-    from os import get_terminal_size
-else:
-    from collections import namedtuple
-    Size = namedtuple('Size', ['lines', 'columns'])
-
-    def get_terminal_size():
-        return Size(*map(int, os.popen('stty size', 'r').read().split()))
 
 if __name__ == '__main__':
     import readline  # appears unused, but makes raw_input much nicer
@@ -121,9 +111,9 @@ if __name__ == '__main__':
     display(match, sz.columns)
     while True:
         try:
-            s = raw_input('> ')
+            s = input('> ')
         except (EOFError, KeyboardInterrupt):
-            print
+            print()
             break
         # ' 1234' will search for 1234, not queue song 1234
         if s.isdigit():
