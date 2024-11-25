@@ -24,8 +24,9 @@ def matches(song, terms):
 def search(s):
     try:
         import shlex
+
         terms = [t for t in shlex.split(s) if t != '']
-    except:
+    except Exception:
         terms = [t for t in s.split(' ') if t != '']
     for song in songs:
         if matches(song, terms):
@@ -82,7 +83,7 @@ def display(songs, width=None):
         if c == len(widths) - 1:
             widths[c] = min(widths[c], remaining)
         else:
-            widths[c] = min(widths[c], remaining//2)
+            widths[c] = min(widths[c], remaining // 2)
         remaining -= widths[c]
 
     def trimpad(text, limit, right=False):
@@ -101,7 +102,8 @@ def limit(generator, limit=10):
 
 
 if __name__ == '__main__':
-    import readline  # appears unused, but makes raw_input much nicer
+    # appears unused, but makes raw_input much nicer
+    import readline  # noqa: F401
     from quodlibet.remote import Remote
 
     songs = load()
