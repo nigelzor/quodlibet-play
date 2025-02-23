@@ -21,7 +21,7 @@ def matches(song, terms):
     return True
 
 
-def search(s):
+def search(songs, s):
     try:
         import shlex
 
@@ -101,12 +101,31 @@ def limit(generator, limit=10):
     return list(itertools.islice(generator, limit))
 
 
-if __name__ == '__main__':
+def dump(songs):
+    import json
+
+    for song in songs:
+        print(json.dumps(song))
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--dump', action='store_true', help='print song database as json'
+    )
+    args = parser.parse_args()
+
+    songs = load()
+
+    if args.dump:
+        dump(songs)
+        return
+
     # appears unused, but makes raw_input much nicer
     import readline  # noqa: F401
     from quodlibet.remote import Remote
-
-    songs = load()
 
     sz = get_terminal_size()
     match = limit(songs, sz.lines - 1)
@@ -126,5 +145,9 @@ if __name__ == '__main__':
                 Remote.send_message('play-file ' + match[n]['~filename'])
             continue
         sz = get_terminal_size()
-        match = limit(search(s), sz.lines - 1)
+        match = limit(search(songs, s), sz.lines - 1)
         display(match, sz.columns)
+
+
+if __name__ == '__main__':
+    main()
